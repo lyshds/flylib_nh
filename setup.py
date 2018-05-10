@@ -11,4 +11,3 @@ setup(
     description='fly database and analysis tools',
     #long_description=open('README.md').read(),
 )
-
