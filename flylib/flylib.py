@@ -1,11 +1,13 @@
 import h5py
 import os
 import numpy as np
+import pandas as pd
 class NetFly(object):
     def __init__(self,flynum,rootpath = '/media/imager/FlyDataD/FlyDB/'):
         self.flynum = flynum
         self.flypath = rootpath + '/Fly%3d'%flynum
         self.flatpaths = [os.path.join(dp, f) for dp, dn, fn in os.walk(self.flypath) for f in fn]
+        self.signals_open_bool = False
         try:
             self.h5paths = [fn for fn in self.flatpaths if fn[-4:] == 'hdf5']
         except(IndexError):
@@ -38,7 +40,7 @@ class NetFly(object):
             self.abfpaths = [fn for fn in self.flatpaths if fn[-3:] == 'abf']
         except(IndexError):
             pass
-        
+
     def open_signals(self,extensions = ['hdf5','txt','cpkl','tif','png','bag'],verbose = False):
         self.h5files = dict()
         if not(type(extensions) is list):
@@ -72,7 +74,7 @@ class NetFly(object):
             for fn in self.pngpaths:
                 key = fn.split('/')[-1].split('.')[0]
                 self.__dict__[key] = io.imread(fn)
-    
+        self.signals_open_bool = True
     def save_pickle(self,data,filename):
         import cPickle
         if filename.split('.')[-1] == 'cpkl':
@@ -83,7 +85,7 @@ class NetFly(object):
             with open(os.path.join(self.flypath,filename + '.cpkl'),'wb') as f:
                 cPickle.dump(data,f)
             self.__dict__[filename] = data
-            
+
     def save_hdf5(self,data,filename,overwrite = False):
         import h5py
         if filename.split('.')[-1] == 'hdf5':
@@ -102,7 +104,7 @@ class NetFly(object):
             h_file.create_dataset(filename,data = data,compression = 'gzip')
             h_file.flush()
             self.__dict__[filename] = data
-    
+
     def save_txt(self,string,filename):
         if filename.split('.')[-1] == 'txt':
             fn = os.path.join(self.flypath,filename)
@@ -133,15 +135,15 @@ class NetFly(object):
                                      str(self.flynum)])
         else:
             return subprocess.Popen(['python',os.path.join(self.flypath,filename)])
-        
+
     def copy_to_flydir(self,filename):
         import shutil
         shutil.copy(filename,self.flypath)
-        
+
     def close_signals(self):
         for f in self.h5files.values():
             f.close()
-
+        self.signals_open_bool = False
     def get_last_git_comment(self):
         "return a dictionary with the last comments for the repos tracked in the git_SHA.txt file"
         import os
@@ -157,3 +159,17 @@ class NetFly(object):
             import warnings
             warnings.warn('Fly%s does not contain a git_SHA.txt file'%(self.flynum))
             return {}
+    def construct_dataframe(self):
+        if not(self.signals_open_bool):
+            self.open_signals()
+        flydf = pd.DataFrame()
+
+        flydf['t'] = self.time
+        flydf['stimulus'] = np.array(self.experimental_block)
+        flydf['amp_diff'] = np.array(self.left_amp)-np.array(self.right_amp)
+
+        for (key,value) in self.ca_cam_left_model_fits.items():
+            flydf[key+'_left'] = value
+        for (key,value) in self.ca_cam_right_model_fits.items():
+            flydf[key+'_right'] = value
+        return flydf
