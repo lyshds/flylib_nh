@@ -1,0 +1,8 @@
+setup.py
+flylib/__init__.py
+flylib/flylib.py
+flylib/util.py
+flylib.egg-info/PKG-INFO
+flylib.egg-info/SOURCES.txt
+flylib.egg-info/dependency_links.txt
+flylib.egg-info/top_level.txt
