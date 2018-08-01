@@ -2,6 +2,7 @@ import h5py
 import os
 import numpy as np
 import pandas as pd
+import sys
 class NetFly(object):
     def __init__(self,flynum,rootpath = '/media/imager/FlyDataD/FlyDB/'):
         self.flynum = flynum
@@ -160,16 +161,24 @@ class NetFly(object):
             warnings.warn('Fly%s does not contain a git_SHA.txt file'%(self.flynum))
             return {}
     def construct_dataframe(self):
+        print('Making dataframe for fly number '+str(self.flynum))
         if not(self.signals_open_bool):
             self.open_signals()
         flydf = pd.DataFrame()
 
-        flydf['t'] = self.time
-        flydf['stimulus'] = np.array(self.experimental_block)
-        flydf['amp_diff'] = np.array(self.left_amp)-np.array(self.right_amp)
+        # print(self.__dict__.keys())
+        try:
+            flydf['t'] = self.time
+            flydf['stimulus'] = np.array(self.experimental_block)
+            flydf['amp_diff'] = np.array(self.left_amp)-np.array(self.right_amp)
+            flydf['fly_num'] =  self.flynum*np.ones(np.shape(self.time)).astype(int)
 
-        for (key,value) in self.ca_cam_left_model_fits.items():
-            flydf[key+'_left'] = value
-        for (key,value) in self.ca_cam_right_model_fits.items():
-            flydf[key+'_right'] = value
+            for (key,value) in self.ca_cam_left_model_fits.items():
+                flydf[key+'_left'] = value
+            for (key,value) in self.ca_cam_right_model_fits.items():
+                flydf[key+'_right'] = value
+        except(AttributeError):
+            print('Aborting. Fly '+str(self.flynum)+' does not have all standard'+
+            ' attributes--add them in or pick another fly.')
+            sys.exit()
         return flydf
