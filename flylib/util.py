@@ -2,7 +2,7 @@ import numpy as np
 import flylib
 import pandas as pd
 
-def baby_test_f(arg):
+def baby_test_fg(arg):
     return arg
 
 def idx_by_thresh(signal,thresh = 0.1):
