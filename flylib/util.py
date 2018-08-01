@@ -1,4 +1,6 @@
-import numpy as np 
+import numpy as np
+import flylib
+import pandas as pd
 
 def idx_by_thresh(signal,thresh = 0.1):
     import numpy as np
@@ -51,13 +53,13 @@ def nan_helper(y):
     import numpy as np
     return ~np.isfinite(y), lambda z: z.nonzero()[0]
 
-def fill_nan(y): 
+def fill_nan(y):
     import numpy as np
     nans, x= nan_helper(y)
     #print np.sum(nans)
     y[nans]= np.interp(x(nans), x(~nans), y[~nans])
     return y
-        
+
 def butter_bandpass(lowcut, highcut, sampling_period, order=5):
     import scipy.signal
     sampling_frequency = 1.0/sampling_period
@@ -91,7 +93,7 @@ def butter_highpass(highcut, sampling_period, order=5):
     import scipy.signal
     sampling_frequency = 1.0/sampling_period
     nyq = 0.5 * sampling_frequency
-    high = highcut / nyq 
+    high = highcut / nyq
     b, a = scipy.signal.butter( order, high, btype='high')
     return b, a
 
@@ -144,4 +146,11 @@ def scatterplot_matrix(data, names, **kwargs):
         axes[i,j].yaxis.set_visible(True)
 
     return fig
-    
+
+def construct_multi_fly_df(fly_nums,rootpath='/media/imager/FlyDataD/FlyDB/'):
+    #Input: simple list of fly numbers, opt fly directory
+    #Returns a combined dataframe with all flies
+    flys = [flylib.NetFly(fly_num,rootpath) for fly_num in fly_nums]
+    fly_dfs = [fly.construct_dataframe() for fly in flys]
+    combined_df = pd.concat(fly_dfs,ignore_index=True)
+    return combined_df
