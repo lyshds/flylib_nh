@@ -1,6 +1,8 @@
 import numpy as np
 import flylib
 import pandas as pd
+import itertools
+import re
 
 
 def idx_by_thresh(signal,thresh = 0.1):
@@ -155,3 +157,35 @@ def construct_multi_fly_df(fly_nums,rootpath='/media/imager/FlyDataD/FlyDB/'):
     fly_dfs = [fly.construct_dataframe() for fly in flys]
     combined_df = pd.concat(fly_dfs,ignore_index=True)
     return combined_df
+
+def symm_matrix_half(m):
+    #Returns a 1D array of the values in the triangle half of a symmetric matrix
+    #Excluding the diagonal
+    n_rows = np.shape(m)[0]
+    if len(np.shape(m))>2:
+        collector = np.zeros((n_rows*(n_rows+1)/2-n_rows,2)).astype(type(m[0,0 ]))
+    else:
+        collector = np.zeros(n_rows*(n_rows+1)/2-n_rows)
+    counter = 1
+    last_endpoint = 0
+    for row in range(1,n_rows):
+        entries_to_add = m[row,0:counter]
+        collector[last_endpoint:last_endpoint+counter] = entries_to_add
+        last_endpoint +=counter
+        counter+=1
+    return collector
+def prod_list(l,square=False):
+    side_len = len(l)
+    prod_list = list(itertools.product(
+        l,l))
+    if square:
+        prod_list=np.reshape(prod_list,(side_len,side_len,2))
+    return prod_list
+def muscle_group(muscle):
+    #List capacities
+    if type(muscle)==list or type(muscle)==np.ndarray:
+        return [muscle_group(m) for m in muscle]
+    else:
+        r = re.compile("([a-zA-Z]+)([0-9]+)")
+        g = r.match(muscle)
+        return g.group(1)
