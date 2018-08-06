@@ -158,17 +158,21 @@ def construct_multi_fly_df(fly_nums,rootpath='/media/imager/FlyDataD/FlyDB/'):
     combined_df = pd.concat(fly_dfs,ignore_index=True)
     return combined_df
 
-def symm_matrix_half(m):
+def symm_matrix_half(m,exclude_diagonal=True):
     #Returns a 1D array of the values in the triangle half of a symmetric matrix
-    #Excluding the diagonal
+    #Excluding the diagonal optional
     n_rows = np.shape(m)[0]
-    if len(np.shape(m))>2:
-        collector = np.zeros((n_rows*(n_rows+1)/2-n_rows,2)).astype(type(m[0,0 ]))
+    if exclude_diagonal:
+        collector_size = n_rows*(n_rows+1)/2-n_rows
     else:
-        collector = np.zeros(n_rows*(n_rows+1)/2-n_rows)
-    counter = 1
+        collector_size = n_rows*(n_rows+1)/2
+    if len(np.shape(m))>2:
+        collector = np.zeros((collector_size,2)).astype(type(m[0,0 ]))
+    else:
+        collector = np.zeros(collector_size)
+    counter = 1 #1 if true, 0 if false
     last_endpoint = 0
-    for row in range(1,n_rows):
+    for row in range(int(exclude_diagonal),n_rows):
         entries_to_add = m[row,0:counter]
         collector[last_endpoint:last_endpoint+counter] = entries_to_add
         last_endpoint +=counter
@@ -182,10 +186,13 @@ def prod_list(l,square=False):
         prod_list=np.reshape(prod_list,(side_len,side_len,2))
     return prod_list
 def muscle_group(muscle):
-    #List capacities
+    #Can categorize a list or a single muscle string
     if type(muscle)==list or type(muscle)==np.ndarray:
         return [muscle_group(m) for m in muscle]
     else:
         r = re.compile("([a-zA-Z]+)([0-9]+)")
         g = r.match(muscle)
         return g.group(1)
+def muscle_side(muscle):
+    _,s = muscle.split('_')
+    return s
