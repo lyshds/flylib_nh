@@ -172,8 +172,6 @@ class NetFly(object):
             flydf['t'] = self.time
             flydf['stimulus'] = np.array(self.experimental_block)
             flydf['amp_diff'] = np.array(self.left_amp)-np.array(self.right_amp)
-            flydf['left_amp'] = np.array(self.left_amp)
-            flydf['right_amp'] = np.array(self.right_amp)
             flydf['fly_num'] =  self.flynum*np.ones(np.shape(self.time)).astype(int)
 
             for (key,value) in self.ca_cam_left_model_fits.items():
